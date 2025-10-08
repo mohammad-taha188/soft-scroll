@@ -7,6 +7,50 @@ export default function PageScroll({ children }) {
   const [direction, setDirection] = useState("down");
   const isScrolling = useRef(false); // Flag برای جلوگیری از چند Scroll پشت سر هم
 
+  const touchStart = useRef(0);
+
+  const handleTouchStart = (e) => {
+    touchStart.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    const delta = touchStart.current - e.changedTouches[0].clientY;
+    if (Math.abs(delta) < 30) return; // جلوگیری از جابجایی خیلی کوچک
+    if (delta > 0 && current < children.length - 1) {
+      goTo(current + 1); // اسکرول پایین
+    } else if (delta < 0 && current > 0) {
+      goTo(current - 1); // اسکرول بالا
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("wheel", scrollHandler, { passive: false });
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener("wheel", scrollHandler);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [current]);
+
+  useEffect(() => {
+    const handleTouchMove = (e) => {
+      // اگر بخش فعلی 0 (اولین) هست، اجازه بده pull-to-refresh کار کنه
+      if (current === 0 && e.touches[0].clientY > touchStart.current) {
+        return; // هیچ کاری انجام نمی‌ده → مرورگر می‌تونه refresh کنه
+      }
+      e.preventDefault(); // در بقیه موارد scroll سفارشی رو فعال کن
+    };
+
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+
+    return () => {
+      window.removeEventListener("touchmove", handleTouchMove);
+    };
+  }, [current]);
+
   const scrollHandler = (e) => {
     e.preventDefault();
     if (isScrolling.current) return; // اگر در حال Scroll هستیم، کاری نکن
