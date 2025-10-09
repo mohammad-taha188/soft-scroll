@@ -5,6 +5,10 @@ Scrolls one section at a time and supports navigation dots.
 
 ---
 
+created by ChatGPT and me
+
+---
+
 ## How to Use
 
 ### 1. Add the components to your project
